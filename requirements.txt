@@ -1,0 +1,8 @@
+Flask
+Jinja2
+Werkzeug
+torch 
+torchvision 
+torchaudio
+transformers
+spacy

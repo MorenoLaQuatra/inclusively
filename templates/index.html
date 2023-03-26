@@ -1,0 +1,27 @@
+{% include "header.html" %}
+
+{% block content %}
+    <!-- Main content goes here -->
+    <h1>Inclusively</h1>
+    <p> 
+        This is a demo for the Inclusively project.
+        It aims at developing deep learning models that can <b>detect</b> and <b>correct</b> non-inclusive language.
+    </p>
+
+    <p>
+        It leverages an NLP pipeline that includes:
+        <ul>
+            <li><b>Detection:</b> Detecting non-inclusive language in a text.</li>
+            <li><b>Rewriting:</b> If some non-inclusive language is detected, the model will rewrite the text to make it inclusive.</li>
+        </ul>
+    </p>
+
+    <p>
+        Currently supported languages: 
+        <ul>
+            <li>🇮🇹 Italian</li>
+        </ul>
+    </p>
+{% endblock %}
+  
+{% include "footer.html" %}

@@ -1,0 +1,81 @@
+{% include "header.html" %}
+
+{% block content %}
+    <!-- H1 centered Inclusively -->
+    <h1 style="text-align: center;">Testing Inclusively</h1>
+    <br>
+    <hr>
+    <br>
+    <!-- divide page in two columns -->
+    <div class="row">
+        <div class="col-md-6">
+            <!-- Textbox to enter text + button to submit -->
+            <form action="/testing" method="post">
+                <div class="mb-3">
+                    <label for="input_text" class="form-label">Input</label>
+                    <textarea class="form-control" id="input_text" name="input_text" rows="3"></textarea>
+                </div>
+                <!-- Submit button with onclick event - call function submit_text() -->
+                <button type="button" class="btn btn-primary" onclick="submit_text()">Submit</button>
+            </form>
+            
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="output_text" class="form-label">Output</label>
+                <div id="output_text">
+                    <p>No text submitted yet.</p>
+                </div>
+            </div>
+        </div>
+            
+    </div>
+
+    <script>
+
+        function submit_text() {
+            // get the input text
+            var input_text = document.getElementById("input_text").value;
+            JsLoadingOverlay.show({
+                'overlayBackgroundColor': '#444444',
+                'overlayOpacity': 0.8,
+                'spinnerIcon': 'ball-grid-pulse',
+                'spinnerColor': '#ffffff',
+                'spinnerSize': '2x',
+                'overlayIDName': 'overlay',
+                'spinnerIDName': 'spinner',
+                'spinnerZIndex':99999,
+                'overlayZIndex':99998
+              });
+
+            // send a POST request to the server
+            // the server will return the output text
+            // the output text will be displayed in the output text box
+            $.ajax({
+                type: "POST",
+                url: "/submit_testing",
+                data: {input_text: input_text},
+                success: function(data) {
+                    document.getElementById("output_text").innerHTML = data["output_HTML"];
+                    JsLoadingOverlay.hide();
+                }
+            });
+        }
+
+        // a function to resize text area (input_text) to fit the text
+        // https://stackoverflow.com/questions/454202/creating-a-textarea-with-auto-resize
+        function resize_textarea() {
+            var textarea = document.getElementById("input_text");
+            textarea.style.height = "";
+            textarea.style.height = Math.min(textarea.scrollHeight, 450) + "px";
+        }
+
+        // call resize_textarea() when the text in the input_text box changes
+        document.getElementById("input_text").addEventListener("input", resize_textarea);
+
+    </script>
+
+    
+{% endblock %}
+  
+{% include "footer.html" %}
