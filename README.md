@@ -20,6 +20,20 @@ The platform is composed of 4 main pages:
 - **Evaluation**: The evaluation page. It allows users to evaluate the correctness of the corrections made by Inclusively. Each user can provide a feedback for each correction at sentence level.
 - **Explaination**: The explaination page. It contains the output of explainability methods applied to the model. It can allow *data scientists* to understand how the model works and how it makes its decisions.
 
+## Screenshots
+
+**Home page**
+
+![Home page](demo_screenshots/screen_home.png)
+
+**Testing page**
+
+![Testing page](demo_screenshots/screen_testing.png)
+
+**Evaluation page**
+
+![Evaluation page](demo_screenshots/screen_evaluation.png)
+
 ## Supported languages
 
 - 🇮🇹 Italian 
