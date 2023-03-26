@@ -6,3 +6,4 @@ torchvision
 torchaudio
 transformers
 spacy
+pandas

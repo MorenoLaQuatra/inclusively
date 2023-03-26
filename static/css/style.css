@@ -117,3 +117,16 @@ body {
     /* text color blue */
     color: #228B22;
   }
+
+  .form_feedback {
+    /* visualize each form field in a separate line */
+    display: block;
+
+    /* add some space between the form fields */
+    margin-bottom: 1rem;
+
+    /* make checkboxes pleasant to look at */
+    padding: 0.5rem;
+
+  }
+

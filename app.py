@@ -1,6 +1,8 @@
 from flask import Flask, render_template
 from flask import url_for, redirect, request, make_response, jsonify, send_from_directory
 
+import pandas as pd
+
 import transformers
 import spacy
 import os
@@ -25,6 +27,8 @@ clf_mapping = {
     "LABEL_1" : "not_inclusive",
     "LABEL_2" : "not_pertinent",
 }
+
+FEEDBACKS_FOLDER = "feedbacks/"
 
 # ------------------ Define functions ------------------
 def _classify(text):
@@ -154,14 +158,51 @@ def submit_evaluation():
             "success": success
         }
     )
-
-
+# ------------------ Feedback ------------------
+@app.route('/submit_feedback_evaluation', methods=["GET", "POST"])
 def submit_feedback_evaluation():
     '''
     This function is called when the user submit the feedback form on the evaluation page.
     '''
 
-    
+    success = True
+    try:
+        # get the feedback
+        feedback = request.json
+        original_sentences = feedback["original_sentences"]
+        rewriting = feedback["rewriting"]
+        classification = feedback["classification"]
+        classification_feedback = feedback["classification_feedback"]
+        rewriting_feedback = feedback["rewriting_feedback"]
+        return_message = "Thank you for your feedback!"
+
+        # create a dataframe with the feedback
+        df = pd.DataFrame({
+            "original_sentence": original_sentences,
+            "model_classification": classification,
+            "classification_feedback": classification_feedback,
+            "model_rewriting": rewriting,
+            "rewriting_feedback": rewriting_feedback
+        })
+
+        # save the dataframe as a tsv file
+        # find a unique filename in the feedbacks folder
+        i = 0
+        while os.path.exists(FEEDBACKS_FOLDER + f"feedback_{i}.tsv"):
+            i += 1
+        df.to_csv(FEEDBACKS_FOLDER + f"feedback_{i}.tsv", sep="\t", index=False)
+
+    except Exception as e:
+        print(e)
+        success = False
+
+    return jsonify(
+        {
+            "success": success,
+            "message": return_message
+        }
+    )
+
 
 
 if __name__ == '__main__':
