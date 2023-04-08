@@ -4,6 +4,9 @@ from flask import url_for, redirect, request, make_response, jsonify, send_from_
 import pandas as pd
 
 import transformers
+from ferret.explainers.shap import SHAPExplainer
+from ferret.explainers.gradient import IntegratedGradientExplainer
+from ferret.explainers.lime import LIMEExplainer
 import spacy
 import os
 
@@ -22,6 +25,15 @@ s2s_model_name = "../gradio/s2s_model"
 clf_pipeline = transformers.pipeline("text-classification", model=clf_model_name, tokenizer=clf_model_name, device=0)
 s2s_pipeline = transformers.pipeline("text2text-generation", model=s2s_model_name, tokenizer=s2s_model_name, device=0)
 
+clf_model = transformers.AutoModelForSequenceClassification.from_pretrained(clf_model_name).to("cuda:0")
+clf_tokenizer = transformers.AutoTokenizer.from_pretrained(clf_model_name)
+
+explainers = {
+    "shap": SHAPExplainer(clf_model, clf_tokenizer),
+    "gradient": IntegratedGradientExplainer(clf_model, clf_tokenizer),
+    "lime": LIMEExplainer(clf_model, clf_tokenizer)
+}
+
 clf_mapping = {
     "LABEL_0" : "inclusive",
     "LABEL_1" : "not_inclusive",
@@ -32,8 +44,11 @@ FEEDBACKS_FOLDER = "feedbacks/"
 
 # ------------------ Define functions ------------------
 def _classify(text):
-
     return clf_mapping[clf_pipeline(text)[0]["label"]]
+
+def _classify_and_get_class_id(text):
+    cls = clf_pipeline(text)[0]["label"]
+    return cls, int(cls.split("_")[1])
 
 def _reformulate(text):
     return s2s_pipeline(text, max_length=128)[0]["generated_text"]
@@ -203,6 +218,53 @@ def submit_feedback_evaluation():
         }
     )
 
+@app.route('/explaination')
+def explaination():
+    title = 'Explaination'
+    return render_template('explaination.html', title=title)
+
+@app.route('/submit_for_explaination', methods=["GET", "POST"])
+def run_explainability_models():
+    '''
+    This function is called when the user submit a text on the explaination page.
+    It should run the classification and rewriting models (if needed) and return the output.
+    The output is a JSON object containing, for each sentence, the original sentence, the classification and the rewriting.
+    '''
+    title = 'Explaination'
+
+    input_text = request.form.get("input_text")
+    explainability_technique = request.form.get("explainability_technique")
+
+    if explainability_technique not in explainers.keys():
+        return jsonify(
+            {
+                "success": False,
+                "message": "Explainability technique not supported"
+            }
+        )
+    
+    cls_output, class_int = _classify_and_get_class_id(input_text)
+    explainer = explainers[explainability_technique]
+    output_explanation = explainer(input_text, target=class_int)
+    # output_explanation contains .text, .tokens, .scores
+    tokens = output_explanation.tokens
+    scores = list(output_explanation.scores)
+    return jsonify(
+        {
+            "success": True,
+            "tokens": tokens,
+            "scores": scores,
+            "explainability_technique": explainability_technique,
+            "classification_output": clf_mapping[cls_output]
+        }
+    )
+
+
+
+    
+    
+
+    
 
 
 if __name__ == '__main__':

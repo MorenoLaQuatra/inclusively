@@ -1,0 +1,224 @@
+{% include "header.html" %}
+
+{% block content %}
+    <img src="/static/images/logo_color.png" alt="logo" style="display: block; margin-left: auto; margin-right: auto; width: 30%; margin-top: -20px; margin-bottom: -20px;">
+    <p style="text-align: center;">
+        The explaination page aims at providing data scientists with a better understanding of the models used in the Inclusively project.
+        <b>Explainability</b> models are used to provide <b>insights</b> on the decisions made by the models.
+    </p>
+    <hr>
+    <!-- divide page in two columns -->
+    <div class="row">
+        <div class="col-md-6">
+            <!-- Textbox to enter text + button to submit -->
+            <form action="/testing" method="post">
+                <div class="mb-3">
+                    <label for="input_text" class="form-label">Input</label>
+                    <textarea class="form-control" id="input_text" name="input_text" rows="3"></textarea>
+                </div>
+                <!-- dropdown to select the explainability technique: shap, gradient, lime -->
+                <div class="mb-3">
+                    <label for="explainability_technique" class="form-label">Explainability technique</label>
+                    <select class="form-select" id="explainability_technique" name="explainability_technique">
+                        <option value="shap">SHAP</option>
+                        <option value="gradient">Gradient</option>
+                        <option value="lime">LIME</option>
+                    </select>
+                </div>
+                <!-- Submit button with onclick event - call function submit_text() -->
+                <button type="button" class="btn btn-primary" onclick="submit_text()">Submit</button>
+            </form>
+            
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="output_text" class="form-label">Output</label>
+                <div id="output_text">
+                    <p>No text submitted yet.</p>
+                </div>
+            </div>
+        </div>
+            
+    </div>
+
+    <script>
+
+        function submit_text() {
+            // get the input text
+            var input_text = document.getElementById("input_text").value;
+            var explainability_technique = document.getElementById("explainability_technique").value;
+            JsLoadingOverlay.show({
+                'overlayBackgroundColor': '#444444',
+                'overlayOpacity': 0.8,
+                'spinnerIcon': 'ball-grid-pulse',
+                'spinnerColor': '#ffffff',
+                'spinnerSize': '2x',
+                'overlayIDName': 'overlay',
+                'spinnerIDName': 'spinner',
+                'spinnerZIndex':99999,
+                'overlayZIndex':99998
+              });
+
+            
+
+            // send a POST request to the server
+            // the server will return the output text
+            // the output text will be displayed in the output text box
+            $.ajax({
+                type: "POST",
+                url: "/submit_for_explaination",
+                data: {input_text: input_text, explainability_technique: explainability_technique},
+                success: function(data) {
+
+                    explainability_technique = data["explainability_technique"];
+                    // make 100 shades of grey - till white
+                    color_shades = [];
+                    num_shades = 100;
+                    for (var i = 0; i < num_shades; i++) {
+                        color_number = Math.floor(255 - i * 255 / num_shades);
+                        color_shades.push("rgb(" + color_number + "," + color_number + "," + color_number + ")");
+                    }
+                    
+
+                    if (data["success"] == false) {
+                        document.getElementById("output_text").innerHTML = "<p>Something went wrong. Please try again.</p>";
+                        JsLoadingOverlay.hide();
+                    } else {
+                        tokens = data["tokens"];
+                        scores = data["scores"];
+
+                        // create a table to display the tokens and their explanations
+                        var table = document.createElement("table");
+                        table.className = "table";
+                        var thead = document.createElement("thead");
+                        var tr = document.createElement("tr");
+                        var th1 = document.createElement("th");
+                        th1.scope = "col";
+                        th1.innerHTML = "Token";
+                        var th2 = document.createElement("th");
+                        th2.scope = "col";
+                        th2.innerHTML = "Explanation";
+                        tr.appendChild(th1);
+                        tr.appendChild(th2);
+                        thead.appendChild(tr);
+                        table.appendChild(thead);
+                        var tbody = document.createElement("tbody");
+                        for (var i = 0; i < tokens.length; i++) {
+                            var tr = document.createElement("tr");
+                            var td1 = document.createElement("td");
+                            td1.innerHTML = tokens[i];
+                            var td2 = document.createElement("td");
+                            // round the score to 3 decimal places
+                            sc = Math.round(scores[i] * 1000) / 1000;
+                            td2.innerHTML = sc;
+                            // create a div with the score as innerHTML
+                            //add class score to td2
+                            td2.className = "score";
+                            tr.appendChild(td1);
+                            tr.appendChild(td2);
+                            tbody.appendChild(tr);
+                        }
+                        table.appendChild(tbody);
+                        table.className = "explaination_table";
+
+                        // at the beginning add a h3 to include the classification of the text
+                        var h3 = document.createElement("h3");
+                        if (data["classification_output"] == "not_inclusive") {
+                            str_h3 = "Classification: <span style='color: red;'>Not Inclusive</span>";
+                        } else if (data["classification_output"] == "inclusive") {
+                            str_h3 = "Classification: <span style='color: green;'>Inclusive</span>";
+                        } else {
+                            str_h3 = "Classification: <span style='color: black;'>Not pertinent</span>";
+                        }
+
+                        h3.innerHTML = str_h3;
+
+                        document.getElementById("output_text").innerHTML = "";
+                        document.getElementById("output_text").appendChild(h3);
+                        // append hr
+                        var hr = document.createElement("hr");
+                        document.getElementById("output_text").appendChild(hr);
+                        // append table
+                        document.getElementById("output_text").appendChild(table);
+
+                        // colorize the table
+                        colorize_table(table, data["classification_output"]);
+
+                        JsLoadingOverlay.hide();
+                    }
+                    
+                }
+            });
+        }
+        function colorize_table(table, classification_output) {
+
+            // style the table with bootstrap
+            table.classList.add('table', 'table-bordered', 'table-hover', 'table-sm');
+            // center all cells
+            table.querySelectorAll('td').forEach(td => td.style.textAlign = 'center');
+            // center the header
+            table.querySelectorAll('th').forEach(th => th.style.textAlign = 'center');
+
+            // get min and max scores
+            const scores = Array.from(table.querySelectorAll('td.score')).map(td => parseFloat(td.textContent));
+            const min = Math.min(...scores);
+            const max = Math.max(...scores);
+
+          
+            // define a function to map a score to a color
+            function mapScoreToColor(score, color) {
+              const percent = (score - min) / (max - min);
+              console.log(color);
+              if (color === 'red') {
+                const hue = 0; // red
+                const saturation = 100;
+                const lightness = 100 - percent * 50;
+                return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+              } else if (color === 'green') {
+                const hue = 120; // green
+                const saturation = 50;
+                const lightness = 100 - percent * 50;
+                return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+              } else if (color === 'black') {
+                const hue = 0; // black
+                const saturation = 0;
+                const lightness = 100 - percent * 50;
+                return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+              }
+            }
+          
+            // iterate over the table cells and set their background color
+            table.querySelectorAll('td.score').forEach(td => {
+                const score = parseFloat(td.textContent);
+                if (classification_output == "not_inclusive") {
+                    td.style.backgroundColor = mapScoreToColor(score, 'red');
+                } else if (classification_output == "inclusive") {
+                    td.style.backgroundColor = mapScoreToColor(score, 'green');
+                } else {
+                    td.style.backgroundColor = mapScoreToColor(score, 'black');
+                }
+                //td.style.backgroundColor = mapScoreToColor(score);
+                // make the text white if the background is dark
+                if (score > (max + min) / 2) {
+                    td.style.color = 'white';
+                }
+            });
+        }
+
+        // a function to resize text area (input_text) to fit the text
+        // https://stackoverflow.com/questions/454202/creating-a-textarea-with-auto-resize
+        function resize_textarea() {
+            var textarea = document.getElementById("input_text");
+            textarea.style.height = "";
+            textarea.style.height = Math.min(textarea.scrollHeight, 450) + "px";
+        }
+
+        // call resize_textarea() when the text in the input_text box changes
+        document.getElementById("input_text").addEventListener("input", resize_textarea);
+
+    </script>
+
+    
+{% endblock %}
+  
+{% include "footer.html" %}
