@@ -2,10 +2,11 @@
 
 {% block content %}
     <img src="/static/images/logo_color.png" alt="logo" style="display: block; margin-left: auto; margin-right: auto; width: 30%; margin-top: -20px; margin-bottom: -20px;">
+    <h4 style="text-align: center;">Writing Assistant</h4>
     <p style="text-align: center;">
-        This is a demo for the Inclusively project.
-        It aims at developing deep learning models that can <b>detect</b> and <b>correct</b> non-inclusive language.
+        This page aims at assisting the user in writing inclusive texts. The user can insert the input text on the left side of the page and the output text will be displayed on the right side of the page.
     </p>
+
     <hr>
     <!-- divide page in two columns -->
     <div class="row">
@@ -13,8 +14,8 @@
             <!-- Textbox to enter text + button to submit -->
             <form action="/testing" method="post">
                 <div class="mb-3">
-                    <label for="input_text" class="form-label">Input</label>
-                    <textarea class="form-control" id="input_text" name="input_text" rows="3"></textarea>
+                    <label for="input_text" class="form-label"><b>Input</b></label>
+                    <textarea class="form-control" id="input_text" name="input_text" rows="3" placeholder="Insert the full text to be analyzed here."></textarea>
                 </div>
                 <!-- Submit button with onclick event - call function submit_text() -->
                 <button type="button" class="btn btn-primary" onclick="submit_text()">Submit</button>
@@ -23,13 +24,20 @@
         </div>
         <div class="col-md-6">
             <div class="mb-3">
-                <label for="output_text" class="form-label">Output</label>
+                <label for="output_text" class="form-label"><b>Suggested rewriting</b></label>
                 <div id="output_text">
                     <p>No text submitted yet.</p>
                 </div>
             </div>
         </div>
             
+    </div>
+
+    <div class="color_coding_explaination" style="margin-top: 20px; text-align: right; font-size: 14px;">
+        <p style="margin-bottom: 0px !important;"><b>Color coding:</b></p>
+        <p style="margin-bottom: 0px !important;"><span class="inclusive">Inclusive</span> - The sentence is inclusive.</p>
+        <p style="margin-bottom: 0px !important;"><span class="not_inclusive">Not inclusive</span> - The sentence is not inclusive.</p>
+        <p style="margin-bottom: 0px !important;"><span class="not_pertinent">Not pertinent</span> - The sentence is not containing any ambiguous expression.</p>
     </div>
 
     <script>

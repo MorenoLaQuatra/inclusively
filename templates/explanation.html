@@ -2,9 +2,10 @@
 
 {% block content %}
     <img src="/static/images/logo_color.png" alt="logo" style="display: block; margin-left: auto; margin-right: auto; width: 30%; margin-top: -20px; margin-bottom: -20px;">
+    <h4 style="text-align: center;">Model Inspection</h4>
     <p style="text-align: center;">
-        The explaination page aims at providing data scientists with a better understanding of the models used in the Inclusively project.
-        <b>Explainability</b> models are used to provide <b>insights</b> on the decisions made by the models.
+        The model inspection page aims at providing a tool to gain insights into the models' decision-making processes.
+        The expert user can provide one sentence and select the explainability techniques to be used.
     </p>
     <hr>
     <!-- divide page in two columns -->
@@ -13,15 +14,26 @@
             <!-- Textbox to enter text + button to submit -->
             <form action="/testing" method="post">
                 <div class="mb-3">
-                    <label for="input_text" class="form-label">Input</label>
-                    <textarea class="form-control" id="input_text" name="input_text" rows="3"></textarea>
+                    <label for="input_text" class="form-label"><b>Input</b></label>
+                    <textarea class="form-control" id="input_text" name="input_text" rows="3" placeholder="Insert one sentence to be analyzed here."></textarea>
                 </div>
                 <!-- dropdown to select the explainability technique: shap, gradient, lime -->
                 <div class="mb-3">
-                    <label for="explainability_technique" class="form-label">Explainability technique</label>
+                    <label for="explainability_technique" class="form-label">Select the Explainability technique for the classification model</label>
                     <select class="form-select" id="explainability_technique" name="explainability_technique">
                         <option value="shap">SHAP</option>
                         <option value="gradient">Gradient</option>
+                        <option value="lime">LIME</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="s2s_explainability_technique" class="form-label">Select the Explainability technique for the rewriting model</label>
+                    <select class="form-select" id="s2s_explainability_technique" name="s2s_explainability_technique">
+                        <option value="saliency">Saliency</option>
+                        <option value="input_x_gradient">Input x Gradient</option>
+                        <option value="integrated_gradients">Integrated Gradient</option>
+                        <option value="deeplift">DeepLIFT</option>
+                        <option value="gradient_shap">Gradient SHAP</option>
                         <option value="lime">LIME</option>
                     </select>
                 </div>
@@ -32,7 +44,7 @@
         </div>
         <div class="col-md-6">
             <div class="mb-3">
-                <label for="output_text" class="form-label">Output</label>
+                <label for="output_text" class="form-label"><b>Explanation</b></label>
                 <div id="output_text">
                     <p>No text submitted yet.</p>
                 </div>
@@ -41,12 +53,18 @@
             
     </div>
 
+    <div id = "s2s_explanation">
+
+    </div>
+
     <script>
 
         function submit_text() {
             // get the input text
             var input_text = document.getElementById("input_text").value;
             var explainability_technique = document.getElementById("explainability_technique").value;
+            var s2s_explainability_technique = document.getElementById("s2s_explainability_technique").value;
+
             JsLoadingOverlay.show({
                 'overlayBackgroundColor': '#444444',
                 'overlayOpacity': 0.8,
@@ -66,11 +84,12 @@
             // the output text will be displayed in the output text box
             $.ajax({
                 type: "POST",
-                url: "/submit_for_explaination",
-                data: {input_text: input_text, explainability_technique: explainability_technique},
+                url: "/submit_for_explanation",
+                data: {input_text: input_text, explainability_technique: explainability_technique, s2s_explainability_technique: s2s_explainability_technique},
                 success: function(data) {
 
                     explainability_technique = data["explainability_technique"];
+                    s2s_explainability_technique = data["s2s_explainability_technique"];
                     // make 100 shades of grey - till white
                     color_shades = [];
                     num_shades = 100;
@@ -119,7 +138,7 @@
                             tbody.appendChild(tr);
                         }
                         table.appendChild(tbody);
-                        table.className = "explaination_table";
+                        table.className = "explanation_table";
 
                         // at the beginning add a h3 to include the classification of the text
                         var h3 = document.createElement("h3");
@@ -145,6 +164,9 @@
                         colorize_table(table, data["classification_output"]);
 
                         JsLoadingOverlay.hide();
+
+                        document.getElementById("s2s_explanation").innerHTML = data["s2s_html_explanation"];
+                        
                     }
                     
                 }

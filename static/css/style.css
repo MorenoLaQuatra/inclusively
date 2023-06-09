@@ -130,3 +130,7 @@ body {
 
   }
 
+/* active links - class active are in f47060 */
+a.active {
+  color: #f47060 !important;
+}

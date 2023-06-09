@@ -9,6 +9,8 @@ from ferret.explainers.gradient import IntegratedGradientExplainer
 from ferret.explainers.lime import LIMEExplainer
 import spacy
 import os
+import inseq
+from inseq.data.aggregator import SubwordAggregator
 
 
 # ------------------ Prepare models and variables ------------------
@@ -22,11 +24,22 @@ except:
 clf_model_name = "../gradio/clf_model"
 s2s_model_name = "../gradio/s2s_model"
 
-clf_pipeline = transformers.pipeline("text-classification", model=clf_model_name, tokenizer=clf_model_name, device=0)
-s2s_pipeline = transformers.pipeline("text2text-generation", model=s2s_model_name, tokenizer=s2s_model_name, device=0)
+clf_pipeline = transformers.pipeline("text-classification", model=clf_model_name, tokenizer=clf_model_name, device="cpu")
+s2s_pipeline = transformers.pipeline("text2text-generation", model=s2s_model_name, tokenizer=s2s_model_name, device="cpu")
 
-clf_model = transformers.AutoModelForSequenceClassification.from_pretrained(clf_model_name).to("cuda:0")
+clf_model = transformers.AutoModelForSequenceClassification.from_pretrained(clf_model_name).to("cpu")
 clf_tokenizer = transformers.AutoTokenizer.from_pretrained(clf_model_name)
+s2s_explainability_techniques = [
+    "saliency",
+    "integrated_gradients",
+    "deeplift",
+    "gradient_shap",
+    "lime",
+    "input_x_gradient",
+]
+s2s_explainers = {}
+for technique in s2s_explainability_techniques:
+    s2s_explainers[technique] = inseq.load_model(s2s_model_name, technique, device="cpu")
 
 explainers = {
     "shap": SHAPExplainer(clf_model, clf_tokenizer),
@@ -218,22 +231,23 @@ def submit_feedback_evaluation():
         }
     )
 
-@app.route('/explaination')
-def explaination():
-    title = 'Explaination'
-    return render_template('explaination.html', title=title)
+@app.route('/explanation')
+def explanation():
+    title = 'explanation'
+    return render_template('explanation.html', title=title)
 
-@app.route('/submit_for_explaination', methods=["GET", "POST"])
+@app.route('/submit_for_explanation', methods=["GET", "POST"])
 def run_explainability_models():
     '''
-    This function is called when the user submit a text on the explaination page.
+    This function is called when the user submit a text on the explanation page.
     It should run the classification and rewriting models (if needed) and return the output.
     The output is a JSON object containing, for each sentence, the original sentence, the classification and the rewriting.
     '''
-    title = 'Explaination'
+    title = 'Explanation'
 
     input_text = request.form.get("input_text")
     explainability_technique = request.form.get("explainability_technique")
+    s2s_explainability_technique = request.form.get("s2s_explainability_technique")
 
     if explainability_technique not in explainers.keys():
         return jsonify(
@@ -249,23 +263,26 @@ def run_explainability_models():
     # output_explanation contains .text, .tokens, .scores
     tokens = output_explanation.tokens
     scores = list(output_explanation.scores)
+
+    # s2s explanation
+    s2s_explainer = s2s_explainers[s2s_explainability_technique]
+    out = s2s_explainer.attribute(input_text, n_steps=100)
+    header_html = """<br/><b>0th instance:</b><br/>\n<html>\n"""
+    s2s_html_explanation = out.aggregate().show(display=False, return_html=True, aggregator=SubwordAggregator).replace(header_html, "")
+
     return jsonify(
         {
             "success": True,
             "tokens": tokens,
             "scores": scores,
             "explainability_technique": explainability_technique,
-            "classification_output": clf_mapping[cls_output]
+            "classification_output": clf_mapping[cls_output],
+            "s2s_html_explanation": s2s_html_explanation
         }
     )
-
-
-
-    
-    
 
     
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=9999)

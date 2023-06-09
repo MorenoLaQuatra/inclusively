@@ -2,9 +2,10 @@
 
 {% block content %}
     <img src="/static/images/logo_color.png" alt="logo" style="display: block; margin-left: auto; margin-right: auto; width: 30%; margin-top: -20px; margin-bottom: -20px;">
+    <h4 style="text-align: center;">Human Evaluation and Annotation</h4>
     <p style="text-align: center;">
-        This is a demo for the Inclusively project.
-        You can provide <b>feedbacks</b> to help us improve the model.
+        This page aims at collecting feedback from expert users on the quality of the classification and rewriting models. 
+        The input text can be inserted on the left side of the page and the output text will be displayed on the right side of the page.
     </p>
     <hr>
 
@@ -14,8 +15,8 @@
             <!-- Textbox to enter text + button to submit -->
             <form action="/testing" method="post">
                 <div class="mb-3">
-                    <label for="input_text" class="form-label">Input</label>
-                    <textarea class="form-control" id="input_text" name="input_text" rows="3"></textarea>
+                    <label for="input_text" class="form-label"><b>Input</b></label>
+                    <textarea class="form-control" id="input_text" name="input_text" rows="3" placeholder="Insert the full text to be analyzed here."></textarea>
                 </div>
                 <!-- Submit button with onclick event - call function submit_text() -->
                 <button type="button" class="btn btn-primary" onclick="submit_text()">Submit</button>
@@ -24,13 +25,20 @@
         </div>
         <div class="col-md-6">
             <div class="mb-3">
-                <label for="output_text" class="form-label">Output</label>
+                <label for="output_text" class="form-label"><b>Human Feedback</b></label>
                 <div id="output_text">
                     <p>No text submitted yet.</p>
                 </div>
             </div>
         </div>
             
+    </div>
+
+    <div class="color_coding_explaination" style="margin-top: 20px; text-align: right; font-size: 14px;">
+        <p style="margin-bottom: 0px !important;"><b>Color coding:</b></p>
+        <p style="margin-bottom: 0px !important;"><span class="inclusive">Inclusive</span> - The sentence is inclusive.</p>
+        <p style="margin-bottom: 0px !important;"><span class="not_inclusive">Not inclusive</span> - The sentence is not inclusive.</p>
+        <p style="margin-bottom: 0px !important;"><span class="not_pertinent">Not pertinent</span> - The sentence is not containing any ambiguous expression.</p>
     </div>
 
     <script>
@@ -111,6 +119,7 @@
                 div.appendChild(br);
 
                 // add a checkbox to get the feedback for the rewriting
+                /*
                 var input = document.createElement("input");
                 input.setAttribute("type", "checkbox");
                 input.setAttribute("name", "not_correct_rewriting_" + i);
@@ -120,9 +129,55 @@
                 var label = document.createElement("label");
                 label.setAttribute("for", "not_correct_rewriting_" + i);
                 label.setAttribute("class", "form-check-label");
+                label.innerHTML = "&nbsp;Rewriting is <b>not</b> correct&nbsp;&nbsp;";
+                div.appendChild(input);
+                div.appendChild(label);
+                // Checkbox rewriting is correct
+                var input = document.createElement("input");
+                input.setAttribute("type", "checkbox");
+                input.setAttribute("name", "correct_rewriting_" + i);
+                input.setAttribute("id", "correct_rewriting_" + i);
+                input.setAttribute("class", "form-check-input");
+                // label for the checkbox - Correct
+                var label = document.createElement("label");
+                label.setAttribute("for", "correct_rewriting_" + i);
+                label.setAttribute("class", "form-check-label");
+                label.innerHTML = "&nbsp;Rewriting is correct";
+                div.appendChild(input);
+                div.appendChild(label);
+                */
+
+                // radio button with 2 options: "correct", "not_correct"
+                var input = document.createElement("input");
+                input.setAttribute("type", "radio");
+                input.setAttribute("name", "rewriting_radio_" + i);
+                input.setAttribute("id", "rewriting_radio_correct_" + i);
+                input.setAttribute("class", "form-check-input");
+                input.setAttribute("value", "correct");
+                // make it selected by default
+                input.setAttribute("checked", "checked");
+                // label for the checkbox - Correct
+                var label = document.createElement("label");
+                label.setAttribute("for", "rewriting_radio_correct_" + i);
+                label.setAttribute("class", "form-check-label");
+                label.innerHTML = "&nbsp;Rewriting is correct&nbsp;&nbsp;";
+                div.appendChild(input);
+                div.appendChild(label);
+                // radio button with 2 options: "correct", "not_correct"
+                var input = document.createElement("input");
+                input.setAttribute("type", "radio");
+                input.setAttribute("name", "rewriting_radio_" + i);
+                input.setAttribute("id", "rewriting_radio_not_correct_" + i);
+                input.setAttribute("class", "form-check-input");
+                input.setAttribute("value", "not_correct");
+                // label for the checkbox - Correct
+                var label = document.createElement("label");
+                label.setAttribute("for", "rewriting_radio_not_correct_" + i);
+                label.setAttribute("class", "form-check-label");
                 label.innerHTML = "&nbsp;Rewriting is <b>not</b> correct";
                 div.appendChild(input);
                 div.appendChild(label);
+                
 
                 // separate with a br
                 var br = document.createElement("br");
@@ -228,7 +283,7 @@
             // get all classification select - classification_feedback_ + index
             var selects_classification = form.querySelectorAll("select[name^='classification_feedback_']");
             // get all rewriting checkboxes - not_correct_rewriting_ + index
-            var checkboxes_rewriting = form.querySelectorAll("input[name^='not_correct_rewriting_']");
+            var radio_rewriting = form.querySelectorAll("input[name^='rewriting_radio_']");
             // get all textarea - rewriting_feedback_ + index
             var textareas = form.querySelectorAll("textarea[name^='rewriting_feedback_']");
             // get all original sentences - class contains "original"
@@ -238,7 +293,8 @@
 
             // print how many checkboxes, textareas, original sentences and rewrites are found
             console.log("checkboxes_classification: " + checkboxes_classification.length)
-            console.log("checkboxes_rewriting: " + checkboxes_rewriting.length)
+            console.log("selects_classification: " + selects_classification.length)
+            console.log("radio_rewriting: " + radio_rewriting.length)
             console.log("textareas: " + textareas.length)
             console.log("original_sentences: " + original_sentences.length)
 
@@ -271,13 +327,12 @@
                     data["classification_feedback"].push("");
                 }
 
-                // if the rewriting checkbox is checked
-                if (checkboxes_rewriting[i].checked) {
-                    data["rewriting"].push("wrong");
-                } else {
-                    data["rewriting"].push("correct");
-                }
-
+                // get rewriting radio button
+                var radio = radio_rewriting[i];
+                // get the value of the selected radio button
+                var value = radio.value;
+                data["rewriting"].push(value);
+                
                 // add the rewriting feedback to the dictionary - if empty add ""
                 if (textareas[i].value == "") {
                     data["rewriting_feedback"].push("");
