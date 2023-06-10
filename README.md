@@ -54,5 +54,5 @@ Citation will be available soon after proceedings publication.
 # People behind Inclusively
 - **Moreno La Quatra** - [Homepage](https://mlaquatra.me) - [GitHub](https://github.com/MorenoLaQuatra) - [Twitter](https://twitter.com/MorenoLaQuatra)
 - **Salvatore Greco** - [Homepage]() - [GitHub]()
-- **Luca Cagliero** - [Homepage]()
+- **Luca Cagliero** - [Homepage](https://www.polito.it/en/staff?p=luca.cagliero)
 - **Tania Cerquitelli** - [Homepage]()
