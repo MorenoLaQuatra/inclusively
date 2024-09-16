@@ -29,6 +29,11 @@ Models will be released upon paper acceptance and publication in this repository
 ... more info will be available soon ...
 ```
 
+## Pre-Trained Models
+
+- 📊 Classification Model: https://huggingface.co/E-MIMIC/inclusively-classification
+- 📝 Reformulation Model: https://huggingface.co/E-MIMIC/inclusively-reformulation-it5
+  
 # Demo
 
 This repository also contains the Flask application that powers the [Inclusively](#) platform demo.
