@@ -22,12 +22,10 @@ If you find this project useful, please consider citing the papers listed in the
 
 # Methodology and Models
 
-A paper describing the methodology and the models trained for this project is currently under review.
-Models will be released upon paper acceptance and publication in this repository.
+Inclusively uses a two-stage deep learning pipeline designed to promote inclusive writing. The first stage employs a **classification model** based on transformer architectures to detect non-inclusive sentences. Once detected, the second stage activates a **sequence-to-sequence model**, which generates inclusive reformulations of the identified text. The platform also integrates feedback from expert users, allowing continuous model refinement through a human-in-the-loop approach. This system enables Inclusively to offer accurate and contextually appropriate rewrites while also promoting self-learning in inclusive writing practices.
 
-```
-... more info will be available soon ...
-```
+For more information, you can check out the [paper here](https://doi.org/10.1007/978-3-031-43430-3_31).
+
 
 ## Pre-Trained Models
 
