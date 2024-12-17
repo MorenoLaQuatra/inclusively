@@ -21,13 +21,13 @@ except:
     os.system("python -m spacy download it_core_news_sm")
     nlp = spacy.load("it_core_news_sm")
 
-clf_model_name = "../gradio/clf_model"
-s2s_model_name = "../gradio/s2s_model"
+clf_model_name = "E-MIMIC/inclusively-classification"
+s2s_model_name = "E-MIMIC/inclusively-reformulation-it5"
 
-clf_pipeline = transformers.pipeline("text-classification", model=clf_model_name, tokenizer=clf_model_name, device="cpu")
-s2s_pipeline = transformers.pipeline("text2text-generation", model=s2s_model_name, tokenizer=s2s_model_name, device="cpu")
+clf_pipeline = transformers.pipeline("text-classification", model=clf_model_name, tokenizer=clf_model_name, device=0)
+s2s_pipeline = transformers.pipeline("text2text-generation", model=s2s_model_name, tokenizer=s2s_model_name, device=0)
 
-clf_model = transformers.AutoModelForSequenceClassification.from_pretrained(clf_model_name).to("cpu")
+clf_model = transformers.AutoModelForSequenceClassification.from_pretrained(clf_model_name).to("cuda")
 clf_tokenizer = transformers.AutoTokenizer.from_pretrained(clf_model_name)
 s2s_explainability_techniques = [
     "saliency",
